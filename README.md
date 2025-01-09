@@ -1,1 +1,0 @@
-# Lang-thang-CTF
