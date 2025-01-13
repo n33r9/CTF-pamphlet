@@ -70,22 +70,22 @@ sudo ln -s /usr/mipsel-linux-gnu /etc/qemu-binfmt/mipsel
 
 ### Shellcode
 
-![alt text](/images/image-8.png)
+![image-8](images/image-8.png)
 
 Use Ghidra to Decompile:
 
-![alt text](/images/image-7.png)
-![alt text](/images/image-6.png)
+![alt text](images/image-7.png)
+![alt text](images/image-6.png)
 
 In `run()`, enter 80-byte `local_58` (no error because `local_58` is initialized to 80 bytes), then enter 544-byte `local_218` (there is a buffer overflow error because `local_218` is only initialized to 524 bytes).
 
-![alt text](/images/image.png)
+![alt text](images/image.png)
 
 `checksec` we see that `NX` is turned off => Stack can be executed => Shellcode when put on Stack will be executed.
 
 When debugging, enter `local_218` of 544 bytes:
 
-![alt text](/images/image-1.png)
+![alt text](images/image-1.png)
 
 See that at `ret` the address has been overwritten by `local_218` => has control over the program.
 
@@ -93,15 +93,15 @@ To execute Shellcode, we need to let the program return a pointer to that Shellc
 
 Using gadget `call rax;`
 
-![alt text](/images/image-3.png)
+![alt text](images/image-3.png)
 
 Using Shellcode of the function `execve('/bin/sh', 0, 0)` to get the shell of the program.
 
-![alt text](/images/image-2.png)
+![alt text](images/image-2.png)
 
 Next, we need to find the offset to ret to overwrite with the address of `call rax;`
 
-![alt text](/images/image-4.png)
+![alt text](images/image-4.png)
 
 Using ```cyclic -l``` finds an offset of 536.
 
@@ -137,16 +137,16 @@ p.sendafter(b'> ', b'A' * offset + p64(call_rax))
 p.interactive()
 ```
 
-![alt text](/images/image-5.png)
+![alt text](images/image-5.png)
 ---
 
 ### Return Oriented Programming (ROP)
 
-![alt text](/images/image-1-2.png)
+![alt text](images/image-1-2.png)
 
 Use Ghidra to Decompile:
 
-![alt text](/images/image-2-0.png)
+![alt text](images/image-2-0.png)
 
 Here there is a buffer overflow error in the `read` function when `local_58` is initialized to 80 but `read` allows input up to 120.
 
@@ -154,15 +154,15 @@ Here there is a buffer overflow error in the `read` function when `local_58` is 
 
 We see here that there is no function that can create a shell, so we have to find a way to leak `libc's address`. Because when we get the address of libc, we can find the address of the `system` function and execute the function `system('/bin/sh')` to create a shell.
 
-![alt text](/images/image-3-2.png)
+![alt text](images/image-3-2.png)
 
 We see that the address of binary is static and that of libc is dynamic. So we have to find a way to leak `libc's base address`.
 
-![alt text](/images/image-4-2.png)
+![alt text](images/image-4-2.png)
 
 Because there is `no canary`, buffer overflow can be used to `return to libc`.
 
-![alt text](/images/image-5-2.png)
+![alt text](images/image-5-2.png)
 
 First, we find the offset of `88`.
 
@@ -172,13 +172,13 @@ GOT: contains the addresses of libc functions. (0x403fd8)
 PLT: executes the function contained in GOT. (0x7ffff7e23bd0)
 ```
 
-![alt text](/images/image-6-2.png)
+![alt text](images/image-6-2.png)
 
 Next, in `puts("Say something: ")`, we see that only one parameter is needed to print the data of that parameter. So if we put the address `puts@got` into RDI (first parameter) and then execute `puts@plt`, we will leak the address of libc.
 
 We use `ropper` to find a gadget to control RDI:
 
-![alt text](/images/image-7-2.png)
+![alt text](images/image-7-2.png)
 
 And that is `0x0000000000401263: pop rdi; ret;`
 
@@ -191,11 +191,11 @@ payload += p64(exe.sym.main)
 sla(b'\n', payload)
 ```
 
-![alt text](/images/image-9-2.png)
+![alt text](images/image-9-2.png)
 
 So we leak 6 address bytes. We see that at the end of the payload there is `exe.sym.main` so that after the leak is complete, the program will run again without ending. Next, we use the 6 leaked bytes to find the libc base address.
 
-![alt text](/images/image-8-2.png)
+![alt text](images/image-8-2.png)
 ![alt text](/images/image-10-2.png)
 
 ```
@@ -207,7 +207,7 @@ log.info("Libc base: " + hex(libc.address))
 
 To find the libc base, we use the leaked address subtract the base address while debugging to find the offset of `0x87bd0`. So we get libc base:
 
-![alt text](/images/image-11-2.png)
+![alt text](images/image-11-2.png)
 
 When we get the libc base, we get the address of the `system` function and the string `'/bin/sh'` in libc. Final step, get shell:
 ```
@@ -270,18 +270,18 @@ sl(payload)
 p.interactive()
 ```
 
-![alt text](/images/image-12-2.png)
+![alt text](images/image-12-2.png)
 ---
 
 ### Format String
 
-![alt text](/images/image3-0.png)
+![alt text](images/image3-0.png)
 
 Use Ghidra to Decompile:
 
-![alt text](/images/image-1-3.png)
-![alt text](/images/image-2-3.png)
-![alt text](/images/image-3-3.png)
+![alt text](images/image-1-3.png)
+![alt text](images/image-2-3.png)
+![alt text](images/image-3-3.png)
 
 We see that there are two gets functions but canary found so we cannot use buffer overflow. However, there is a printf function `printf((char *)((long)&uStack_e9 + 1),local_78);` with format string, which we can use to exploit the program. The `get_flag` function creates a shell, so the goal will be format string to execute this function.
 
@@ -296,7 +296,7 @@ Next, we see that the RELRO part in the checksec is `Partial RELRO`, so we can u
 > * `Full RELRO`:
 > Protects the entire GOT table and other symbol tables, making them completely read-only after linking is complete. GOT is converted to read-only state by reordering and completing the initialization process before the program begins to execute
 
-![alt text](/images/image-4-3.png)
+![alt text](images/image-4-3.png)
 
 It's easy to see that after the `printf` function is the `putchar` function, so we will use format string to overwrite the `putchar@got` address into the `get_flag` function with `%n` and `%c`. Because the binary address is static, we have:
 
@@ -309,7 +309,7 @@ The two addresses above only differ in the last 2 bytes, so we only need to over
 
 The first step to exploit, need to find the offset. In the first `gets` function, we enter a long string of characters, in the second `gets` function we skip it, and in the `printf` function we see where `printf` will format string with an offset of 112.
 
-![alt text](/images/image-5-3.png)
+![alt text](images/image-5-3.png)
 
 After finding the offset, perform format string to overwrite `putchar`. There are 2 ways here: overwrite each byte or overwrite 2 bytes at the same time.
 
@@ -326,7 +326,7 @@ payload += p64(0x404018)
 payload += p64(0x404019)
 ```
 
-![alt text](/images/image-6-3.png)
+![alt text](images/image-6-3.png)
 
 ```
 %73c: Prints 73 characters. 
@@ -338,7 +338,7 @@ payload += p64(0x404019)
 And payload += b'a' is used to align the stack.
 ```
 
-![alt text](/images/image-8-3.png)
+![alt text](images/image-8-3.png)
 
 #### Second way: Overwrite 2 byte.
 
@@ -349,7 +349,7 @@ payload += b'A' * 4
 payload += p64(0x404018)
 ```
 
-![alt text](/images/image-7-3.png)
+![alt text](images/image-7-3.png)
 
 ```
 %4937c: Prints 4937c characters. 
@@ -358,7 +358,7 @@ payload += p64(0x404018)
 payload += b'A' * 4 is used to align the stack.
 ```
 
-![alt text](/images/image-9-3.png)
+![alt text](images/image-9-3.png)
 
 #### Third way: Use `fmtstr_payload`.
 
@@ -378,25 +378,25 @@ assert(len(payload) < (0x158 - 0x78))
 assert(len(payload) < (0x158 - 0x78)): Make sure that the size of the entire payload does not exceed the limit of 224. If the condition is true, the program continues to run normally. If the condition is false (payload exceeds 224 bytes), the program stops and reports an AssertionError. Because if it overflows, it will overwrite the second parameter of printf and will not be format string.
 ```
 
-![alt text](/images/image-10-3.png)
+![alt text](images/image-10-3.png)
 ---
 
 ### Off-By-One
 
 Decompile with Ghidra:
 
-![alt text](/images/image-3-4.png)
-![alt text](/images/image-4-4.png)
+![alt text](images/image-3-4.png)
+![alt text](images/image-4-4.png)
 
-![alt text](/images/image-4-0.png)
+![alt text](images/image-4-0.png)
 
 When run, the program prints an FYI value, and because of `PIE`, each time we run we receive a different FYI value.
 
-![alt text](/images/image-1-4.png)
+![alt text](images/image-1-4.png)
 
 FYI the value that the program prints is the address of the `init()` function. So we can leak the base value of the binary from the `init()` function address.
 
-![alt text](/images/image-2-4.png)
+![alt text](images/image-2-4.png)
 
 ```
 p.recvuntil(b'FYI: ')
@@ -405,11 +405,11 @@ exe.base = int(fyi,16) - exe.sym.init
 log.info('Binary Base: ' + hex(exe.base))
 ```
 
-![alt text](/images/image-5-4.png)
+![alt text](images/image-5-4.png)
 
 The `gets_h` function contains the `system` function, so the goal is to control the program to get to that `gets_h` function. So it is necessary to change the `ret` address of the `main` function to the `gets_h` function address.
 
-![alt text](/images/image-7-4.png)
+![alt text](images/image-7-4.png)
 
 After entering the input, we can see:
 
@@ -445,7 +445,7 @@ p.sendlineafter(b'2024: ', payload)
 
 p.interactive()
 ```
-![alt text](/images/image-6-4.png)
+![alt text](images/image-6-4.png)
 ---
 
 ### Integer Overflow & Signal
@@ -506,7 +506,7 @@ while True:
         p.interactive()
         exit(0)
 ```
-![alt text](image5-0.png)
+![alt text](images/image5-0.png)
 
 ---
 ### Heap
