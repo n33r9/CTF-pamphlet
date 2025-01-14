@@ -352,4 +352,4 @@ NTRU cipher: [link](https://hackmd.io/@vishiswoz/ryDA_PGPo?utm_source=preview-mo
     - $Enc(Enc(message)) = message$
 ![](./Images/4.png)
 
-...To be continued
+...To be continued...
