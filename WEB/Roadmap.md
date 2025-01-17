@@ -32,3 +32,7 @@ Chúng ta cần biết và sử dụng các công cụ sau:
 + TryHackMe
 + OverTheWire
 + CTFtime
+## Một số đề và writeup minh hoạ
++ https://vnmsec.blogspot.com/2022/07/fptu-hacking-ctf-2022-php-is-easy.html
++ https://vnmsec.wordpress.com/2020/11/01/svattt2020-writeup-tsulott3/
++ https://viblo.asia/p/writeup-waf-deser-so-khao-ascis-2022-team-msec-adc-2oKLn2laLQO
